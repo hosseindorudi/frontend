@@ -15,13 +15,18 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import { Container } from '@mui/material';
 import { createTheme } from "@mui/system";
-import axios from "axios";
-const Login = ({ loginModal, setLoginModal }) => {
+import axios from '../../../api/axios'
+
+import useAuth from "../../../customHook/useAuth";
+
+const LOGIN_URL = 'auth/login';
+const Login = ({ loginModal, setLoginModal, setAlertOpen, setAlertType, setAlertTitle }) => {
   const [isCheck, setIsCheck] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [passVal, setPassVal] = useState("");
   const [email, setEmail] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
+  const {setAuth} = useAuth()
 
   const theme = createTheme({
     breakpoints: {
@@ -101,18 +106,62 @@ const Login = ({ loginModal, setLoginModal }) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     let res
-    !isCheck ? 
-     res = await axios.post('auth/login', {
+
+    try {
+      !isCheck ? 
+     res = await axios.post(LOGIN_URL, {
       email: email,
       password: passVal,
+    },
+    {
+      headers: {'Content-Type': 'application/json'},
+      withCredentials:true
     })
     : 
-    res = await axios.post('auth/login', {
+    res = await axios.post(LOGIN_URL, {
       phoneNumber: phoneNumber,
       password: passVal,
-    })
+    },
+    {
+      headers: {'Content-Type': 'application/json'},
+      withCredentials:true
+    }
+    )
 
-    console.log(res)
+    if(res.status === 200) {
+      console.log(res)
+      setAuth({
+        accessToken: res.data.accessToken,
+        fullName:res.data.fullName,
+        isAdmin:res.data.isAdmin,
+        refreshToken:res.data.refreshToken,
+       })
+        setAlertTitle("شما با موفقیت وارد شدید")
+        setAlertType("success")
+        setAlertOpen(true) 
+        setLoginModal(false)
+    } 
+    } catch (err) {
+       if (err.response?.status === 400) {
+        setAlertTitle(err.response.data)
+        setAlertType("warning")
+        setAlertOpen(true) 
+      }else if (err.response?.status === 404) {
+        setAlertTitle(err.response.data)
+        setAlertType("error")
+        setAlertOpen(true) 
+      }else if (err.response?.status === 401) {
+        setAlertTitle(err.response.data)
+        setAlertType("error")
+        setAlertOpen(true) 
+      } else {
+        setAlertTitle("مشکلی رخ داده است دوباره سعی کنید")
+        setAlertType("error")
+        setAlertOpen(true) 
+      }
+    }
+    
+    
   }
 
   

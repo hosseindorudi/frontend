@@ -1,6 +1,5 @@
 import { useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
 
 
 axios.defaults.baseURL = "http://localhost:5000";
@@ -10,12 +9,12 @@ const useAxios = () => {
 
     const [loading, setLoading] = useState(false);
     
-    const toastError = (error) => {
-        toast.error(error, {
-          position: toast.POSITION.BOTTOM_CENTER,
-        });
-        setResponse(null);
-      };
+    // const toastError = (error) => {
+    //     toast.error(error, {
+    //       position: toast.POSITION.BOTTOM_CENTER,
+    //     });
+    //     setResponse(null);
+    //   };
 
       const fetchData = async (params) => {
         try {
@@ -24,7 +23,7 @@ const useAxios = () => {
           const data=result.data
             setResponse(data);
         } catch (error) {
-          toastError(error.message);
+          console.log(error.message);
         } finally {
           setLoading(false);
          

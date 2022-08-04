@@ -14,9 +14,8 @@ import Button from "@mui/material/Button";
 import { Container } from '@mui/material';
 import { createTheme } from "@mui/system";
 import axios from 'axios'
-import { toast } from "react-toastify";
 
-const Register = ({registerModal,setRegisterModal ,setLoginModal}) => {
+const Register = ({registerModal,setRegisterModal ,setLoginModal, setAlertOpen, setAlertType, setAlertTitle}) => {
   const [showPass, setShowPass] = useState(false);
   const [passVal, setPassVal] = useState("");
   const [showConfirmPass, setShowConfirmPass] = useState(false);
@@ -25,6 +24,7 @@ const Register = ({registerModal,setRegisterModal ,setLoginModal}) => {
   const [phoneNumber, setPhoneNumber] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
+  const [loading, setLoading] = useState(false)
   const theme = createTheme({
     breakpoints: {
       values: {
@@ -129,34 +129,49 @@ const Register = ({registerModal,setRegisterModal ,setLoginModal}) => {
   
   const handleSubmit = async (e) => {
     e.preventDefault()
-    let res
-    try {
-       res = await axios.post('api/auth/register', {
-        firstName: firstName,
-        lastName: lastName,
-        phoneNumber: phoneNumber,
-        email: email,
-        password: passVal,
-      })
-      console.log(res.data)
-      if(res.status === 200){
-         toast.success(res.data, {
-          position: toast.POSITION.BOTTOM_CENTER,
-        });
-      //  await setRegisterModal(false)
-      //  await setLoginModal(true)
-      }
-    } catch (error) {
-      if (error.response.status === 409) {
-        console.log(error.response.data)
-        toast.error("مشکلی رخ داده است دوباره سعی کنید", {
-          position: toast.POSITION.BOTTOM_CENTER,
-        });
-      }
-      toast.error(error, {
-        position: toast.POSITION.BOTTOM_CENTER,
-      });
+
+    if(passVal !== confirmpassVal){
+        
+        setAlertTitle("رمز و تاییدیه رمز باید یکی باشند")
+        setAlertType("error")
+        setAlertOpen(true) 
     }
+    else {
+      let res
+      try {
+        setLoading(true)
+         res = await axios.post('api/auth/register', {
+          firstName: firstName,
+          lastName: lastName,
+          phoneNumber: phoneNumber,
+          email: email,
+          password: passVal,
+        })
+        console.log(res.data)
+        if(res.status === 200){
+          setAlertTitle(res.data)
+          setAlertType("success")
+          setAlertOpen(true)
+          setRegisterModal(false)
+          setLoginModal(true)
+        }
+      } catch (error) {
+        if (error.response.status === 409) {
+          console.log(error.response.data)
+          setAlertTitle(error.response.data)
+          setAlertType("error")
+          setAlertOpen(true) 
+        }
+        setAlertTitle(error.response.data)
+        setAlertType("error")
+        setAlertOpen(true) 
+  
+      } finally{
+        setLoading(false)
+      }
+    }
+
+    
     
  
     
@@ -279,7 +294,7 @@ const Register = ({registerModal,setRegisterModal ,setLoginModal}) => {
               </FormControl>
             </Stack>
             <Stack sx={{ m: 1 }}  alignItems="center" width="100%">
-              <Button  variant="outlined" size="medium" sx={textStyle} onClick={(e) => handleSubmit(e)}>
+              <Button  variant="outlined" size="medium" sx={textStyle} onClick={(e) => handleSubmit(e)} disabled={loading}>
                 ثبت اکانت
               </Button>
             </Stack>
